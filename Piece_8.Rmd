@@ -10,6 +10,8 @@ output: html_document
 
 library(tidyverse) 
 library(ggplot2)
+library(emmeans)
+library(haven)
 
 ```
 
@@ -54,9 +56,23 @@ The experiment calls for two variables, Sugar (sugar/no sugar) and Caffeine (caf
 
 set.seed(101)
 
-Distance <- rnorm(30, mean = 100, sd = 4.03)
+Distance <- rnorm(30, mean = 240, sd = 23.03)
 
-group1 <- data.frame(id = 1:30, Sugar = 1, Caffeine = 1, Distance)
+group1 <- data.frame(id = 1:30, Sugar = 1, Caffeine = 1, round(Distance,0))
+
+
+```
+
+Using round() allowed me to make distance a whole number
+
+### No sugar and caffeine
+```{r no sugar and caffeine}
+
+set.seed(103)
+
+Distance <- rnorm(30, mean = 265, sd = 21.3)
+
+group3 <- data.frame(id = 61:90, Sugar = 0, Caffeine = 1, round(Distance,0))
 
 
 ```
@@ -66,23 +82,12 @@ group1 <- data.frame(id = 1:30, Sugar = 1, Caffeine = 1, Distance)
 
 set.seed(102)
 
-Distance <- rnorm(30, mean = 135, sd = 5.1)
+Distance <- rnorm(30, mean = 300, sd = 20.1)
 
-group2 <- data.frame(id = 31:60, Sugar = 1, Caffeine = 0, Distance)
-
-```
-
-### No sugar and caffeine
-```{r no sugar and caffeine}
-
-set.seed(103)
-
-Distance <- rnorm(30, mean = 120, sd = 4.3)
-
-group3 <- data.frame(id = 61:90, Sugar = 0, Caffeine = 1, Distance)
-
+group2 <- data.frame(id = 31:60, Sugar = 1, Caffeine = 0, round(Distance,0))
 
 ```
+
 
 
 ### No sugar and no caffeine
@@ -90,9 +95,9 @@ group3 <- data.frame(id = 61:90, Sugar = 0, Caffeine = 1, Distance)
 
 set.seed(104)
 
-Distance <- rnorm(30, mean = 160, sd = 6.05)
+Distance <- rnorm(30, mean = 300, sd = 23.05)
 
-group4 <- data.frame(id = 91:120, Sugar = 0, Caffeine = 0, Distance)
+group4 <- data.frame(id = 91:120, Sugar = 0, Caffeine = 0, round(Distance,0))
 
 ```
 
@@ -106,9 +111,14 @@ group3and4 <- group3 %>% full_join(group4)
 
 lab_12_data <- group1and2 %>% full_join(group3and4)
 
-write_csv(lab_12_data, "testdata.csv")
+lab_12_data <- lab_12_data %>% 
+  rename(Distance = round.Distance..0.)
 
-hello <- read.csv("testdata.csv")
+write_sav(lab_12_data, "class_data.sav")
+
+Test_data <- read_sav("class_data.sav")
+
+
 
 ```
 
@@ -116,7 +126,140 @@ lab_12_data is a data frame that includes an ID number, if they had sugar or caf
 
 ```{r anova test}
 
+#view(lab_12_data)
 
+hello <- Test_data %>%
+  mutate(Sugar1 = case_when(
+    Sugar == 0 ~ "No Sugar",
+    Sugar == 1 ~ "Sugar"
+  ))
+
+hello <- hello %>%
+  mutate(Caffeine1 = case_when(
+    Caffeine == 0 ~ "No Caffeine",
+    Caffeine == 1 ~ "Caffeine"
+  ))
+
+
+aov(Distance ~ Sugar1 * Caffeine1, hello) %>%
+summary()
+
+hello %>%
+  ggplot(aes(
+    x = Sugar1,
+    y = Distance,
+    group = Caffeine1,
+    color = Caffeine1
+  ))+
+  geom_line()
+
+```
+
+
+
+## Creating the groups part 2
+
+### Sugar and caffeine
+```{r sugar and caffeine 1}
+
+set.seed(101)
+
+Distance <- rnorm(30, mean = 235, sd = 23.03)
+
+group1a <- data.frame(id = 1:30, Sugar = 1, Caffeine = 1, round(Distance,0))
+
+
+```
+
+Using round() allowed me to make distance a whole number
+
+### Sugar and no caffeine
+```{r no sugar and caffeine 1}
+
+set.seed(103)
+
+Distance <- rnorm(30, mean = 280, sd = 21.3)
+
+group3a <- data.frame(id = 61:90, Sugar = 1, Caffeine = 0, round(Distance,0))
+
+
+```
+
+### No Sugar and no caffeine
+```{r no sugar and no caffeine 1}
+
+set.seed(102)
+
+Distance <- rnorm(30, mean = 275, sd = 20.1)
+
+group2a <- data.frame(id = 31:60, Sugar = 0, Caffeine = 0, round(Distance,0))
+
+```
+
+
+
+### No sugar and caffeine
+```{r no sugar and caffeine 1}
+
+set.seed(104)
+
+Distance <- rnorm(30, mean = 250, sd = 23.05)
+
+group4a <- data.frame(id = 91:120, Sugar = 0, Caffeine = 1, round(Distance,0))
+
+```
+
+## Joining the groups
+
+```{r join groups 1}
+
+group1and2a <- group1a %>% full_join(group2a)
+
+group3and4a <- group3a %>% full_join(group4a)
+
+lab_12_data_test <- group1and2a %>% full_join(group3and4a)
+
+lab_12_data_test <- lab_12_data_test %>% 
+  rename(Distance = round.Distance..0.)
+
+write_sav(lab_12_data_test, "class_data_official.sav")
+
+Test_data1 <- read_sav("class_data_official.sav")
+
+
+
+```
+
+lab_12_data is a data frame that includes an ID number, if they had sugar or caffeine, and a distance score.
+
+```{r anova test 1}
+
+#view(lab_12_data)
+
+helloa <- Test_data1 %>%
+  mutate(Sugar1 = case_when(
+    Sugar == 0 ~ "No Sugar",
+    Sugar == 1 ~ "Sugar"
+  ))
+
+helloa <- helloa %>%
+  mutate(Caffeine1 = case_when(
+    Caffeine == 0 ~ "No Caffeine",
+    Caffeine == 1 ~ "Caffeine"
+  ))
+
+
+aov(Distance ~ Sugar1 * Caffeine1, helloa) %>%
+summary()
+
+helloa %>%
+  ggplot(aes(
+    x = Sugar1,
+    y = Distance,
+    group = Caffeine1,
+    color = Caffeine1
+  ))+
+  geom_line()
 
 ```
 

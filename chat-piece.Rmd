@@ -1,0 +1,146 @@
+---
+title: "chat-file"
+author: "Benjamin Egan"
+date: "2025-04-07"
+output: html_document
+---
+
+```{r simulate-2x2-best-match, message=FALSE, warning=FALSE}
+
+set.seed(123)
+library(tidyverse)
+library(ggplot2)
+library(emmeans)
+
+n_per_cell <- 30
+max_tries <- 10000
+
+means <- tibble(
+  sugar = rep(c("No", "Yes"), each = 2),
+  caffeine = rep(c("No", "Yes"), times = 2),
+  mean_distance = c(50, 45, 49.5, 43.5),
+  sd = 6
+)
+
+success <- FALSE
+attempt <- 1
+
+best_fit <- list(
+  p_sugar = NA,
+  p_caffeine = NA,
+  p_interaction = NA,
+  distance = Inf,
+  model = NULL,
+  data = NULL
+)
+
+# Helper function to calculate "distance from desired outcome"
+score_fit <- function(p_sugar, p_caff, p_int) {
+  score <- 0
+  if (!is.na(p_sugar)) score <- score + abs(p_sugar - 0.5)  # higher = better
+  if (!is.na(p_caff))  score <- score + abs(p_caff - 0.01)  # lower = better
+  if (!is.na(p_int))   score <- score + abs(p_int - 0.01)
+  return(score)
+}
+
+while (!success && attempt <= max_tries) {
+  sim_data <- means %>%
+    rowwise() %>%
+    mutate(
+      distance = list(rnorm(n_per_cell, mean = mean_distance, sd = sd)),
+      participant = list(1:n_per_cell)
+    ) %>%
+    unnest(c(distance, participant)) %>%
+    mutate(
+      sugar = factor(sugar, levels = c("No", "Yes")),
+      caffeine = factor(caffeine, levels = c("No", "Yes"))
+    )
+
+  model <- tryCatch(
+    aov(distance ~ sugar * caffeine, data = sim_data),
+    error = function(e) NULL
+  )
+
+  if (!is.null(model)) {
+    results <- summary(model)[[1]]
+    if (all(c("sugar", "caffeine", "sugar:caffeine") %in% rownames(results))) {
+      p_sugar <- results["sugar", "Pr(>F)"]
+      p_caffeine <- results["caffeine", "Pr(>F)"]
+      p_interaction <- results["sugar:caffeine", "Pr(>F)"]
+
+      # Track best-fit so far
+      this_score <- score_fit(p_sugar, p_caffeine, p_interaction)
+      if (this_score < best_fit$distance) {
+        best_fit <- list(
+          p_sugar = p_sugar,
+          p_caffeine = p_caffeine,
+          p_interaction = p_interaction,
+          distance = this_score,
+          model = model,
+          data = sim_data
+        )
+      }
+
+      if (!any(is.na(c(p_sugar, p_caffeine, p_interaction)))) {
+        if (p_sugar > 0.05 && p_caffeine < 0.05 && p_interaction < 0.05) {
+          success <- TRUE
+          cat("✅ Success on attempt", attempt, "\n")
+        }
+      }
+
+      if (attempt %% 100 == 0) {
+        cat("Attempt", attempt, 
+            "| p_sugar:", round(p_sugar, 4),
+            "| p_caff:", round(p_caffeine, 4),
+            "| p_int:", round(p_interaction, 4), "\n")
+      }
+    }
+  }
+
+  attempt <- attempt + 1
+}
+
+if (!success) {
+  cat("❌ No perfect fit found after", max_tries, "tries.\n")
+  cat("Closest match:\n")
+  cat("  p_sugar      =", round(best_fit$p_sugar, 4), "\n")
+  cat("  p_caffeine   =", round(best_fit$p_caffeine, 4), "\n")
+  cat("  p_interaction=", round(best_fit$p_interaction, 4), "\n")
+  model <- best_fit$model
+  sim_data <- best_fit$data
+}
+
+# Show final model
+summary(model)
+
+# Plot
+ggplot(sim_data, aes(x = caffeine, y = distance, fill = sugar)) +
+  stat_summary(fun = mean, geom = "bar", position = position_dodge(.9)) +
+  stat_summary(fun.data = mean_se, geom = "errorbar", width = .2,
+               position = position_dodge(.9)) +
+  labs(title = "Sugar x Caffeine Interaction (Best Attempt)",
+       y = "Distance", x = "Caffeine") +
+  theme_minimal()
+
+```
+
+PUTTING BACK INTO CHAT: 
+
+It gave me this error: ❌ No perfect fit found after 10000 tries.
+Closest match:
+  p_sugar      = NA 
+  p_caffeine   = NA 
+  p_interaction= NA 
+Length  Class   Mode 
+     0   NULL   NULL 
+Error in `stat_summary()`:
+! Problem while computing aesthetics.
+ℹ Error occurred in the 1st layer.
+Caused by error:
+! object 'caffeine' not found
+Run `rlang::last_trace()` to see where the error occurred.
+Error in stat_summary(fun = mean, geom = "bar", position = position_dodge(0.9)) : 
+  
+ℹ Error occurred in the 1st layer.
+Caused by error:
+! object 'caffeine' not found
