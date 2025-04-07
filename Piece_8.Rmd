@@ -49,6 +49,9 @@ My plan is to create four different samples, one for each group. I then will joi
 
 The experiment calls for two variables, Sugar (sugar/no sugar) and Caffeine (caffeine/no caffeine), and the DV is reported distance to an object.
 
+I also included gender and age for students to be able to use in their participants sections.
+
+
 ## Creating the groups
 
 ### Sugar and caffeine
@@ -56,52 +59,72 @@ The experiment calls for two variables, Sugar (sugar/no sugar) and Caffeine (caf
 
 set.seed(101)
 
-Distance <- rnorm(30, mean = 240, sd = 23.03)
+Distance <- rnorm(30, mean = 235, sd = 23.03)
 
-group1 <- data.frame(id = 1:30, Sugar = 1, Caffeine = 1, round(Distance,0))
+Gender <- c("Male","Female")
+Gender <- sample(Gender, 30, replace=TRUE, prob=c(0.5, 0.5))
+
+Age <- rnorm(30, mean = 19, sd = .5)
+
+group1 <- data.frame(id = 1:30, Gender, round(Age,0), Sugar = 1, Caffeine = 1, round(Distance,0))
 
 
 ```
 
 Using round() allowed me to make distance a whole number
 
-### No sugar and caffeine
-```{r no sugar and caffeine}
+### No Sugar and no caffeine
+```{r neither sugar or caffeine}
 
-set.seed(103)
+set.seed(102)
 
-Distance <- rnorm(30, mean = 265, sd = 21.3)
+Distance <- rnorm(30, mean = 275, sd = 20.1)
 
-group3 <- data.frame(id = 61:90, Sugar = 0, Caffeine = 1, round(Distance,0))
+Gender <- c("Male","Female")
+Gender <- sample(Gender, 30, replace=TRUE, prob=c(0.5, 0.5))
 
+Age <- rnorm(30, mean = 19, sd = .5)
+
+group2 <- data.frame(id = 31:60, Gender, round(Age,0), Sugar = 0, Caffeine = 0, round(Distance,0))
 
 ```
 
 ### Sugar and no caffeine
 ```{r sugar and no caffeine}
 
-set.seed(102)
+set.seed(103)
 
-Distance <- rnorm(30, mean = 300, sd = 20.1)
+Distance <- rnorm(30, mean = 282, sd = 21.3)
 
-group2 <- data.frame(id = 31:60, Sugar = 1, Caffeine = 0, round(Distance,0))
+Gender <- c("Male","Female")
+Gender <- sample(Gender, 30, replace=TRUE, prob=c(0.5, 0.5))
+
+Age <- rnorm(30, mean = 19, sd = .5)
+
+group3 <- data.frame(id = 61:90, Gender, round(Age,0), Sugar = 1, Caffeine = 0, round(Distance,0))
+
 
 ```
 
-
-
-### No sugar and no caffeine
-```{r neither sugar and caffeine}
+### No sugar and caffeine
+```{r no sugar and caffeine}
 
 set.seed(104)
 
-Distance <- rnorm(30, mean = 300, sd = 23.05)
+Distance <- rnorm(30, mean = 250, sd = 23.05)
 
-group4 <- data.frame(id = 91:120, Sugar = 0, Caffeine = 0, round(Distance,0))
+Gender <- c("Male","Female")
+Gender <- sample(Gender, 30, replace=TRUE, prob=c(0.5, 0.5))
+
+Age <- rnorm(30, mean = 19, sd = .5)
+
+group4 <- data.frame(id = 91:120, Gender, round(Age,0), Sugar = 0, Caffeine = 1, round(Distance,0))
 
 ```
 
 ## Joining the groups
+
+Here I join the datasets together. I only know how to join two datasets at once, so I decided to join the all/none together. I also renamed the distance and age variables, and saved the dataset.
 
 ```{r join groups}
 
@@ -114,152 +137,56 @@ lab_12_data <- group1and2 %>% full_join(group3and4)
 lab_12_data <- lab_12_data %>% 
   rename(Distance = round.Distance..0.)
 
-write_sav(lab_12_data, "class_data.sav")
+lab_12_data <- lab_12_data %>% 
+  rename(Age = round.Age..0.)
 
-Test_data <- read_sav("class_data.sav")
+write_sav(lab_12_data, "class_data_official.sav")
 
-
-
-```
-
-lab_12_data is a data frame that includes an ID number, if they had sugar or caffeine, and a distance score.
-
-```{r anova test}
-
-#view(lab_12_data)
-
-hello <- Test_data %>%
-  mutate(Sugar1 = case_when(
-    Sugar == 0 ~ "No Sugar",
-    Sugar == 1 ~ "Sugar"
-  ))
-
-hello <- hello %>%
-  mutate(Caffeine1 = case_when(
-    Caffeine == 0 ~ "No Caffeine",
-    Caffeine == 1 ~ "Caffeine"
-  ))
-
-
-aov(Distance ~ Sugar1 * Caffeine1, hello) %>%
-summary()
-
-hello %>%
-  ggplot(aes(
-    x = Sugar1,
-    y = Distance,
-    group = Caffeine1,
-    color = Caffeine1
-  ))+
-  geom_line()
-
-```
-
-
-
-## Creating the groups part 2
-
-### Sugar and caffeine
-```{r sugar and caffeine 1}
-
-set.seed(101)
-
-Distance <- rnorm(30, mean = 235, sd = 23.03)
-
-group1a <- data.frame(id = 1:30, Sugar = 1, Caffeine = 1, round(Distance,0))
-
-
-```
-
-Using round() allowed me to make distance a whole number
-
-### Sugar and no caffeine
-```{r no sugar and caffeine 1}
-
-set.seed(103)
-
-Distance <- rnorm(30, mean = 280, sd = 21.3)
-
-group3a <- data.frame(id = 61:90, Sugar = 1, Caffeine = 0, round(Distance,0))
-
-
-```
-
-### No Sugar and no caffeine
-```{r no sugar and no caffeine 1}
-
-set.seed(102)
-
-Distance <- rnorm(30, mean = 275, sd = 20.1)
-
-group2a <- data.frame(id = 31:60, Sugar = 0, Caffeine = 0, round(Distance,0))
-
-```
-
-
-
-### No sugar and caffeine
-```{r no sugar and caffeine 1}
-
-set.seed(104)
-
-Distance <- rnorm(30, mean = 250, sd = 23.05)
-
-group4a <- data.frame(id = 91:120, Sugar = 0, Caffeine = 1, round(Distance,0))
-
-```
-
-## Joining the groups
-
-```{r join groups 1}
-
-group1and2a <- group1a %>% full_join(group2a)
-
-group3and4a <- group3a %>% full_join(group4a)
-
-lab_12_data_test <- group1and2a %>% full_join(group3and4a)
-
-lab_12_data_test <- lab_12_data_test %>% 
-  rename(Distance = round.Distance..0.)
-
-write_sav(lab_12_data_test, "class_data_official.sav")
-
-Test_data1 <- read_sav("class_data_official.sav")
-
-
+Test_data <- read_sav("class_data_official.sav")
 
 ```
 
 lab_12_data is a data frame that includes an ID number, if they had sugar or caffeine, and a distance score.
 
-```{r anova test 1}
+## Testing my dataset
 
-#view(lab_12_data)
+I want to make sure there is a main effect of caffeine, no main effect of sugar, and an interaction that suggests the influence of both caffeine and sugar highly reduces perceived distance. Here, I ran a factorial ANOVA on the data and plotted the means
 
-helloa <- Test_data1 %>%
-  mutate(Sugar1 = case_when(
+```{r anova to test}
+
+
+Visual <- Test_data %>%
+  mutate(Sugar = case_when(
     Sugar == 0 ~ "No Sugar",
     Sugar == 1 ~ "Sugar"
   ))
 
-helloa <- helloa %>%
-  mutate(Caffeine1 = case_when(
+Visual <- Visual %>%
+  mutate(Caffeine = case_when(
     Caffeine == 0 ~ "No Caffeine",
     Caffeine == 1 ~ "Caffeine"
   ))
 
 
-aov(Distance ~ Sugar1 * Caffeine1, helloa) %>%
+aov(Distance ~ Sugar * Caffeine, Visual) %>%
 summary()
 
-helloa %>%
+Visual %>%
   ggplot(aes(
-    x = Sugar1,
+    x = Sugar,
     y = Distance,
-    group = Caffeine1,
-    color = Caffeine1
+    group = Caffeine,
+    color = Caffeine
   ))+
-  geom_line()
+  geom_line()+
+  theme_bw()+
+  labs(
+    x = "Sugar?",
+    y = "Perceived Distance",
+    color = "Caffeine?",
+    title = "Visual for Caffeine x Sugar data"
+  )
 
 ```
 
+Based on the ANOVA and the graph, it looks like I accomplished my goal.
