@@ -152,7 +152,9 @@ lab_12_data is a data frame that includes an ID number, if they had sugar or caf
 
 I want to make sure there is a main effect of caffeine, no main effect of sugar, and an interaction that suggests the influence of both caffeine and sugar highly reduces perceived distance. Here, I ran a factorial ANOVA on the data and plotted the means
 
-```{r anova to test, warning = FALSE, message = FALSE, include = FALSE}
+
+This top one is my attempt, which 100% works
+```{r anova to test, warning = FALSE, message = FALSE}
 
 
 Visual <- Test_data %>%
@@ -187,6 +189,12 @@ Visual %>%
   )
 
 ```
+
+Based on the ANOVA and the graph, it looks like I accomplished my goal.
+
+<br/> <br/> <br/>
+
+This is a more streamlined version created by ChatGPT. I was looking to make a version for a classmate who had minimal experience in r. I knew they'd change the means and standard deviations, and wanted to make sure the change was reflected on the graph.
 
 ```{r anova visual, warning = FALSE, message = FALSE}
 
@@ -236,5 +244,3 @@ Visual1 %>%
 
     
 ```
-
-Based on the ANOVA and the graph, it looks like I accomplished my goal.
