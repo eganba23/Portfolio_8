@@ -1,12 +1,11 @@
----
-title: "Creating Data"
-author: "Benjamin Egan"
-output: html_document
----
+The basics are that you can change the means and sd to run
 
-#### Created 4/3/25
 
 ```{r setup, include = FALSE}
+
+list.of.packages <- c("tidyverse", "ggplot2","emmeans", "haven")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
 
 library(tidyverse) 
 library(ggplot2)
@@ -15,22 +14,20 @@ library(haven)
 
 ```
 
-## Objective
-
-As I mentioned in piece 3, I serve as a teaching assistant for the undergraduate Research Methods in psychology course at Wake Forest University. They are required to write a final paper, for which they need to write up and analyze a 2x2 experiment. As a TA, I have to create the data for the experiment. Since it's a 2x2 between subjects with at least 100 participants, this would be incredibly difficult. Luckily I walked through module 13 on simulating data, and should be able to create the data.
-
-The basic function I'll need to use is rnorm(). This will let me randomly generate a sample of a normal distribution. I'm starting and making sure I can actually generate the data.
-
+## Here's what is happening
 
 ```{r base rnorm}
 
+#ensures that the random generation stays the same
 set.seed(123)
 
+#this is what you'll be changing it's rnorm(sample size, mean, sd)
 base_rnorm <- rnorm(100, mean = 50, sd = 5)
 
+#making the dataframe
 first_attempt <- data.frame(id = 1:100, base_rnorm)
 
-                                      
+#plot                                      
 data.frame(first_attempt) %>%
 ggplot(
  aes(x=base_rnorm)
@@ -45,19 +42,12 @@ ggplot(
 
 ```
 
-My plan is to create four different samples, one for each group. I then will join them to create a large dataset. This way I can control the main effects and interactions.
 
-The experiment calls for two variables, Sugar (sugar/no sugar) and Caffeine (caffeine/no caffeine), and the DV is reported distance to an object.
-
-I also included gender and age for students to be able to use in their participants sections.
-
-
-## Creating the groups
 
 ### Sugar and caffeine
 ```{r sugar and caffeine}
 
-set.seed(101)
+set.seed(105)
 
 Distance <- rnorm(30, mean = 235, sd = 23.03)
 
@@ -76,7 +66,7 @@ Using round() allowed me to make distance a whole number
 ### No Sugar and no caffeine
 ```{r neither sugar or caffeine}
 
-set.seed(102)
+set.seed(106)
 
 Distance <- rnorm(30, mean = 275, sd = 20.1)
 
@@ -92,7 +82,7 @@ group2 <- data.frame(id = 31:60, Gender, round(Age,0), Sugar = 0, Caffeine = 0, 
 ### Sugar and no caffeine
 ```{r sugar and no caffeine}
 
-set.seed(103)
+set.seed(107)
 
 Distance <- rnorm(30, mean = 282, sd = 21.3)
 
@@ -109,7 +99,7 @@ group3 <- data.frame(id = 61:90, Gender, round(Age,0), Sugar = 1, Caffeine = 0, 
 ### No sugar and caffeine
 ```{r no sugar and caffeine}
 
-set.seed(104)
+set.seed(108)
 
 Distance <- rnorm(30, mean = 250, sd = 23.05)
 
@@ -122,10 +112,7 @@ group4 <- data.frame(id = 91:120, Gender, round(Age,0), Sugar = 0, Caffeine = 1,
 
 ```
 
-## Joining the groups
-
-Here I join the datasets together. I only know how to join two datasets at once, so I decided to join the all/none together. I also renamed the distance and age variables, and saved the dataset.
-
+## Code to join it all into one big dataset and download to your computer
 ```{r join groups}
 
 group1and2 <- group1 %>% full_join(group2)
@@ -140,17 +127,16 @@ lab_12_data <- lab_12_data %>%
 lab_12_data <- lab_12_data %>% 
   rename(Age = round.Age..0.)
 
+#change whatever in quotes to rename the dataset. Just make sure you have .sav attached
 write_sav(lab_12_data, "class_data_official.sav")
 
+#also change it here too
 Test_data <- read_sav("class_data_official.sav")
 
 ```
 
-lab_12_data is a data frame that includes an ID number, if they had sugar or caffeine, and a distance score.
 
-## Testing my dataset
-
-I want to make sure there is a main effect of caffeine, no main effect of sugar, and an interaction that suggests the influence of both caffeine and sugar highly reduces perceived distance. Here, I ran a factorial ANOVA on the data and plotted the means
+## Testing the dataset
 
 ```{r anova to test, warning = FALSE, message = FALSE, include = FALSE}
 
@@ -236,5 +222,3 @@ Visual1 %>%
 
     
 ```
-
-Based on the ANOVA and the graph, it looks like I accomplished my goal.
